@@ -67,32 +67,32 @@ def minmax(inicio, static_eval, max_deep = Inf):
 	if len(moves) == 0:
 		raise Exception('No es posible realizar ningún movimiento dado el estado inicial de la partida!');
 	
-	mejor_ventaja = -Inf;
-	
 	# Obtenemos el siguiente movimiento que más máximice la ventaja de MAX con respecto a MIN
-	for move in moves:
-		ventaja = _minmax(inicio.transform(move), static_eval, max_deep-1, False);
-		if ventaja > mejor_ventaja: 
-			mejor_ventaja = ventaja;
-			best_move = move;
-	return best_move;
+	ventaja, mejor_movimiento = _minmax(inicio, static_eval, max_deep, True);
+	return mejor_movimiento;
 	
-	
-# Este método auxiliar devuelve como de mejor es una configuración del juego dada para MAX con respecto a MIN.
+# Este método auxiliar devuelve como de mejor es una configuración del juego dada para MAX con respecto a MIN y 
+# el siguiente movimiento que debería tomar el jugador MAX/MIN para que MAX alcanze esa ventaja con MIN.
 def _minmax(nodo, static_eval, max_deep, is_max):
 	# Si es un nodo terminal o se alcanza la profundidad máxima, no expandir más el árbol.
 	# Devolver su evaluación estática (si es terminal, coincide con su función de utilidad)
 	if nodo.is_leaf() or max_deep == 0:
-		return static_eval(nodo);
+		return static_eval(nodo), None;
 	
 	# Expandir el nodo.
 	mejor_ventaja = -Inf if is_max else Inf;
+	mejor_movimiento = None;
 	
-	for hijo in [nodo.transform(move) for move in nodo.next_moves(is_max)]:
-		ventaja = _minmax(hijo, static_eval, max_deep-1, not is_max);
-		mejor_ventaja = max(mejor_ventaja, ventaja) if is_max else min(mejor_ventaja, ventaja);
-	return mejor_ventaja;
+	# Encontramos el movimiento que maximiza la ventaja de MAX con respecto a MIN..
+	for move in nodo.next_moves(is_max):
+		# Minimizamos si es un nodo MIN y máximizamos si es un nodo MÁX
+		ventaja, movimiento = _minmax(nodo.transform(move), static_eval, max_deep-1, not is_max);
+		if (is_max and (ventaja > mejor_ventaja)) or (not is_max and (ventaja < mejor_ventaja)):
+			mejor_ventaja = ventaja;
+			mejor_movimiento = move;
+	return (mejor_ventaja, mejor_movimiento);
 	
 # Este método es igual que el anterior, solo que se poda el árbol (poda alpha-beta)
 def minmax_alphabeta(inicio, static_eval, max_deep): 
 	pass
+
