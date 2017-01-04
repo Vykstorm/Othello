@@ -92,7 +92,50 @@ def _minmax(nodo, static_eval, max_deep, is_max):
 			mejor_movimiento = move;
 	return (mejor_ventaja, mejor_movimiento);
 	
+	
 # Este método es igual que el anterior, solo que se poda el árbol (poda alpha-beta)
-def minmax_alphabeta(inicio, static_eval, max_deep): 
-	pass
-
+def minmax_alphabeta(inicio, static_eval, max_deep = Inf): 
+	if max_deep <= 0:
+		raise Exception('El nivel de profundidad debe ser mayor que 0!');
+		
+	moves = inicio.next_moves(True);
+	if len(moves) == 0:
+		raise Exception('No es posible realizar ningún movimiento dado el estado inicial de la partida!');
+	
+	# Obtenemos el siguiente movimiento que más máximice la ventaja de MAX con respecto a MIN
+	ventaja, mejor_movimiento = _minmax_alphabeta(inicio, static_eval, max_deep, -Inf, Inf, True);
+	return mejor_movimiento;
+	
+	
+def _minmax_alphabeta(nodo, static_eval, max_deep, alpha, beta, is_max):
+	if nodo.is_leaf() or max_deep == 0:
+		return static_eval(nodo), None;
+	
+	mejor_movimiento = None;
+	
+	if is_max:
+		# El nodo actual es MAX. 
+		for move in nodo.next_moves(True):
+			ventaja, movimiento = _minmax_alphabeta(nodo.transform(move), static_eval, max_deep-1, alpha, beta, False);
+			# Si el valor del nodo hijo (beta) es mayor que el valor alpha del nodo actual, asignar el 
+			# primero a este último.
+			if ventaja > alpha:
+				alpha = ventaja;
+				mejor_movimiento = move;
+				
+			# Hay poda alpha?
+			if beta <= alpha:
+				# No procesar el resto de ramas.
+				break;					
+		return alpha, mejor_movimiento;
+	else:
+		for move in nodo.next_moves(False):
+			ventaja, movimiento = _minmax_alphabeta(nodo.transform(move), static_eval, max_deep-1, alpha, beta, True);
+			if ventaja > beta:
+				beta = ventaja;
+				mejor_movimiento = move;
+			# Hay poda beta?
+			if beta <= alpha:
+				# No procesar el resto de ramas
+				break;
+			return beta, mejor_movimiento
