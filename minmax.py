@@ -5,6 +5,7 @@
 # con poda alpha-beta (orientado a juegos de 2 jugadores), además de todas la estructuras de datos necesarias para estos.
 
 from utils import Inf
+from graph import MinMaxTree
 
 
 # Esta clase define el estado de una partida de dos jugadores. Por ejemplo, en el juego
@@ -49,7 +50,7 @@ class StaticEval:
 		
 	# Este método debe devolver un entero indicando como de bueno es el estado para MAX 
 	# (mayor cuanto más favorable sera)
-	def eval(self,state):
+	def eval(self,state,is_max):
 		pass 
 
 
@@ -69,15 +70,22 @@ def minmax(inicio, static_eval, max_deep = Inf):
 	
 	# Obtenemos el siguiente movimiento que más máximice la ventaja de MAX con respecto a MIN
 	ventaja, mejor_movimiento = _minmax(inicio, static_eval, max_deep, True);
+	#debug_graph = MinMaxTree(repr(inicio))
+	#venta, mejor_movimiento = _minmax(inicio, static_eval, max_deep, True, debug_graph=debug_graph)
+	#debug_graph.show()
 	return mejor_movimiento;
 	
 # Este método auxiliar devuelve como de mejor es una configuración del juego dada para MAX con respecto a MIN y 
 # el siguiente movimiento que debería tomar el jugador MAX/MIN para que MAX alcanze esa ventaja con MIN.
-def _minmax(nodo, static_eval, max_deep, is_max):
+def _minmax(nodo, static_eval, max_deep, is_max, **kargs):
+	#debug_graph = kargs['debug_graph']
+	
 	# Si es un nodo terminal o se alcanza la profundidad máxima, no expandir más el árbol.
 	# Devolver su evaluación estática (si es terminal, coincide con su función de utilidad)
 	if nodo.is_leaf() or max_deep == 0:
-		return static_eval(nodo), None;
+		#debug_graph.set_curr_node_value(str(static_eval(nodo, is_max)))
+		#debug_graph.backtrace()
+		return static_eval(nodo, is_max), None;
 	
 	# Expandir el nodo.
 	mejor_ventaja = -Inf if is_max else Inf;
@@ -85,11 +93,16 @@ def _minmax(nodo, static_eval, max_deep, is_max):
 	
 	# Encontramos el movimiento que maximiza la ventaja de MAX con respecto a MIN..
 	for move in nodo.next_moves(is_max):
+		#debug_graph.add_node(repr(nodo.transform(move)), repr(move), not is_max)
 		# Minimizamos si es un nodo MIN y máximizamos si es un nodo MÁX
-		ventaja, movimiento = _minmax(nodo.transform(move), static_eval, max_deep-1, not is_max);
+		ventaja, movimiento = _minmax(nodo.transform(move), static_eval, max_deep-1, not is_max, **kargs);
 		if (is_max and (ventaja > mejor_ventaja)) or (not is_max and (ventaja < mejor_ventaja)):
 			mejor_ventaja = ventaja;
 			mejor_movimiento = move;
+			
+	#debug_graph.set_curr_node_value(mejor_ventaja)
+	#debug_graph.backtrace()
+	
 	return (mejor_ventaja, mejor_movimiento);
 	
 	
@@ -104,38 +117,49 @@ def minmax_alphabeta(inicio, static_eval, max_deep = Inf):
 	
 	# Obtenemos el siguiente movimiento que más máximice la ventaja de MAX con respecto a MIN
 	ventaja, mejor_movimiento = _minmax_alphabeta(inicio, static_eval, max_deep, -Inf, Inf, True);
+	#debug_graph = MinMaxTree(repr(inicio))
+	#ventaja, mejor_movimiento = _minmax_alphabeta(inicio, static_eval, max_deep, -Inf, Inf, True, debug_graph=debug_graph);
+	#debug_graph.show()
 	return mejor_movimiento;
 	
 	
-def _minmax_alphabeta(nodo, static_eval, max_deep, alpha, beta, is_max):
+def _minmax_alphabeta(nodo, static_eval, max_deep, alpha, beta, is_max, **kargs):
+	#debug_graph = kargs['debug_graph']
 	if nodo.is_leaf() or max_deep == 0:
-		return static_eval(nodo), None;
+		#debug_graph.set_curr_node_value(str(static_eval(nodo, is_max)))
+		#debug_graph.backtrace()
+		return static_eval(nodo, is_max), None;
 	
 	mejor_movimiento = None;
 	
 	if is_max:
 		# El nodo actual es MAX. 
 		for move in nodo.next_moves(True):
-			ventaja, movimiento = _minmax_alphabeta(nodo.transform(move), static_eval, max_deep-1, alpha, beta, False);
+			#debug_graph.add_node(repr(nodo.transform(move)), repr(move), not is_max)
+			ventaja, movimiento = _minmax_alphabeta(nodo.transform(move), static_eval, max_deep-1, alpha, beta, False, **kargs);
 			# Si el valor del nodo hijo (beta) es mayor que el valor alpha del nodo actual, asignar el 
 			# primero a este último.
 			if ventaja > alpha:
 				alpha = ventaja;
 				mejor_movimiento = move;
-				
 			# Hay poda alpha?
 			if beta <= alpha:
 				# No procesar el resto de ramas.
-				break;					
+				break;
+		#debug_graph.set_curr_node_value('(a=' + str(alpha) + ',b=' + str(beta) + ')')
+		#debug_graph.backtrace()
 		return alpha, mejor_movimiento;
 	else:
 		for move in nodo.next_moves(False):
-			ventaja, movimiento = _minmax_alphabeta(nodo.transform(move), static_eval, max_deep-1, alpha, beta, True);
-			if ventaja > beta:
+			#debug_graph.add_node(repr(nodo.transform(move)), repr(move), not is_max)
+			ventaja, movimiento = _minmax_alphabeta(nodo.transform(move), static_eval, max_deep-1, alpha, beta, True, **kargs);
+			if ventaja < beta:
 				beta = ventaja;
 				mejor_movimiento = move;
 			# Hay poda beta?
 			if beta <= alpha:
 				# No procesar el resto de ramas
 				break;
-			return beta, mejor_movimiento
+		#debug_graph.set_curr_node_value('(a=' + str(alpha) + ',b=' + str(beta) + ')')
+		#debug_graph.backtrace()
+		return beta, mejor_movimiento
