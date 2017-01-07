@@ -1,16 +1,15 @@
 #!/usr/bin/python
 # -*- coding: iso8859-1 -*-
-# Autor: V铆ctor Ruiz G贸mez
+# Autor: V韈tor Ruiz G髆ez
 # Descripci贸n: Este script sirve para testear los algoritmo Min-Max con y sin poda
 # alpha-beta (se trata de un juego m谩s sencillo que Othello -> Nim)
 
-
-from minmax import minmax, minmax_alphabeta;
-from minmax import State, Move, StaticEval;
-
+from minmax import State, Move, StaticEval, MinMax, MinMaxAlphaBeta;
+1
 # Definici贸n de estado en el juego Nim: numero de fichas en la mesa
 class NimState(State):
-	def __init__(self,fichas):
+	def __init__(self,curr_player,fichas):
+		State.__init__(self, curr_player)
 		self.fichas = fichas;
 		
 	# Cuando un estado es terminal?
@@ -19,14 +18,14 @@ class NimState(State):
 		
 	# Posibles siguientes movimientos que pueden realizarse dada esta
 	# configuraci贸n?
-	def next_moves(self, is_max):
-		return [NimMove(x+1) for x in range(0,self.fichas)];
+	def next_moves(self):
+		moves = [NimMove(x+1) for x in range(0,self.fichas)];
+		return moves[:3];
 
 	# Como pasar de un estado a otro dado que uno de los jugadores ha realizado
 	# un movimiento...
 	def transform(self, move):
-		return NimState(self.fichas - move.fichas_tomadas);
-	
+		return NimState(not self.get_curr_player(), self.fichas - move.fichas_tomadas);
 	
 	def __repr__(self):
 		return repr(self.fichas);
@@ -40,7 +39,7 @@ class NimMove(Move):
 		self.fichas_tomadas = fichas_tomadas;
 		
 	def __repr__(self):
-		return repr(self.fichas_tomadas);
+		return 'Coger ' + repr(self.fichas_tomadas);
 	
 	def __str__(self):
 		return str(self.fichas_tomadas);
@@ -50,17 +49,18 @@ class NimMove(Move):
 class NimStaticEval(StaticEval):
 	# Como evaluamos como de bueno es un nodo para MAX?
 	def eval(self, state):
-		return 1 if state.fichas > 0 else -1;
+		return (1 if state.fichas == 0 else -1) if state.get_curr_player() else (-1 if state.fichas == 0 else 1);
 
 
 
 
 if __name__ == '__main__':
-	num_fichas = 5;
+	num_fichas = 4;
 	print 'Numero de fichas inicial: ' + str(num_fichas);
 	
 	# Ejecuta min-max sin poda alpha beta.
-	move = minmax(NimState(num_fichas), NimStaticEval());
+	minmax = MinMaxAlphaBeta(NimState(True, num_fichas), NimStaticEval(), 10).debug();
+	move = minmax()
 	print 'Siguiente movimiento, tomar ' + str(move) + ' fichas';
 
 	
