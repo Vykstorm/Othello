@@ -10,17 +10,18 @@ from graph import MinMaxTree
 
 # Esta clase define el estado de una partida de dos jugadores. Por ejemplo, en el juego
 # tres en raya, el estado indicará que fichas hay en el tablero y en que posiciones se 
-# encuentran.
+# encuentran, y que jugador tiene el turno actual de la partida.
 class State:
+	def __init__(self,curr_player):
+		self.curr_player = curr_player
+	
 	# Debe devolver un valor booleano si el estado es terminal (fin de la partida)
 	def is_leaf(self):
 		pass
 	
 	# Debe devolver todos los posibles movimientos que puede realizar un jugador dada esta
 	# configuración de la partida
-	# @param is_max Es un valor booleano indicando si el jugador que realiza dichos movimientos
-	# es el jugador MAX o si por el contrario es el jugador MIN.
-	def next_moves(self,is_max):
+	def next_moves(self):
 		pass
 	
 	# Debe devolver otro estado que sea el resultado de aplicar el movimiento indicado
@@ -28,6 +29,10 @@ class State:
 	def transform(self,move):
 		pass
 
+	# Devuelve el jugador que tiene el turno actual de la partida.
+	# Devuelve el valor True si el jugador MAX tiene el turno actual o False si MIN tiene el turno.
+	def get_curr_player(self):
+		return self.curr_player
 
 # Esta clase define un posible movimiento que permite cambiar de un estado a otro.
 class Move:
@@ -50,7 +55,7 @@ class StaticEval:
 		
 	# Este método debe devolver un entero indicando como de bueno es el estado para MAX 
 	# (mayor cuanto más favorable sera)
-	def eval(self,state,is_max):
+	def eval(self,state):
 		pass 
 
 
@@ -64,7 +69,7 @@ def minmax(inicio, static_eval, max_deep = Inf):
 	if max_deep <= 0:
 		raise Exception('El nivel de profundidad debe ser mayor que 0!');
 		
-	moves = inicio.next_moves(True);
+	moves = inicio.next_moves();
 	if len(moves) == 0:
 		raise Exception('No es posible realizar ningún movimiento dado el estado inicial de la partida!');
 	
@@ -83,16 +88,16 @@ def _minmax(nodo, static_eval, max_deep, is_max, **kargs):
 	# Si es un nodo terminal o se alcanza la profundidad máxima, no expandir más el árbol.
 	# Devolver su evaluación estática (si es terminal, coincide con su función de utilidad)
 	if nodo.is_leaf() or max_deep == 0:
-		#debug_graph.set_curr_node_value(str(static_eval(nodo, is_max)))
+		#debug_graph.set_curr_node_value(str(static_eval(nodo)))
 		#debug_graph.backtrace()
-		return static_eval(nodo, is_max), None;
+		return static_eval(nodo), None;
 	
 	# Expandir el nodo.
 	mejor_ventaja = -Inf if is_max else Inf;
 	mejor_movimiento = None;
 	
 	# Encontramos el movimiento que maximiza la ventaja de MAX con respecto a MIN..
-	for move in nodo.next_moves(is_max):
+	for move in nodo.next_moves():
 		#debug_graph.add_node(repr(nodo.transform(move)), repr(move), not is_max)
 		# Minimizamos si es un nodo MIN y máximizamos si es un nodo MÁX
 		ventaja, movimiento = _minmax(nodo.transform(move), static_eval, max_deep-1, not is_max, **kargs);
@@ -111,7 +116,7 @@ def minmax_alphabeta(inicio, static_eval, max_deep = Inf):
 	if max_deep <= 0:
 		raise Exception('El nivel de profundidad debe ser mayor que 0!');
 		
-	moves = inicio.next_moves(True);
+	moves = inicio.next_moves();
 	if len(moves) == 0:
 		raise Exception('No es posible realizar ningún movimiento dado el estado inicial de la partida!');
 	
@@ -126,15 +131,15 @@ def minmax_alphabeta(inicio, static_eval, max_deep = Inf):
 def _minmax_alphabeta(nodo, static_eval, max_deep, alpha, beta, is_max, **kargs):
 	#debug_graph = kargs['debug_graph']
 	if nodo.is_leaf() or max_deep == 0:
-		#debug_graph.set_curr_node_value(str(static_eval(nodo, is_max)))
+		#debug_graph.set_curr_node_value(str(static_eval(nodo)))
 		#debug_graph.backtrace()
-		return static_eval(nodo, is_max), None;
+		return static_eval(nodo), None;
 	
 	mejor_movimiento = None;
 	
 	if is_max:
 		# El nodo actual es MAX. 
-		for move in nodo.next_moves(True):
+		for move in nodo.next_moves():
 			#debug_graph.add_node(repr(nodo.transform(move)), repr(move), not is_max)
 			ventaja, movimiento = _minmax_alphabeta(nodo.transform(move), static_eval, max_deep-1, alpha, beta, False, **kargs);
 			# Si el valor del nodo hijo (beta) es mayor que el valor alpha del nodo actual, asignar el 
@@ -150,7 +155,7 @@ def _minmax_alphabeta(nodo, static_eval, max_deep, alpha, beta, is_max, **kargs)
 		#debug_graph.backtrace()
 		return alpha, mejor_movimiento;
 	else:
-		for move in nodo.next_moves(False):
+		for move in nodo.next_moves():
 			#debug_graph.add_node(repr(nodo.transform(move)), repr(move), not is_max)
 			ventaja, movimiento = _minmax_alphabeta(nodo.transform(move), static_eval, max_deep-1, alpha, beta, True, **kargs);
 			if ventaja < beta:
