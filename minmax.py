@@ -10,10 +10,8 @@ from utils import Inf
 # tres en raya, el estado indicará que fichas hay en el tablero y en que posiciones se 
 # encuentran, y que jugador tiene el turno actual de la partida.
 class State:
-	# Inicializa la instancia. Debe indicarse que jugador tiene el turno: True si MAX tiene
-	# el turno, false en caso de que sea MIN.
-	# Por defecto si no se especifica, es MAX quien tiene el turno.
-	def __init__(self,curr_player = True):
+	# Inicializa la instancia.
+	def __init__(self,curr_player):
 		self.curr_player = curr_player
 	
 	# Debe devolver un valor booleano si el estado es terminal (fin de la partida)
@@ -31,7 +29,6 @@ class State:
 		pass
 
 	# Devuelve el jugador que tiene el turno actual de la partida.
-	# Devuelve el valor True si el jugador MAX tiene el turno actual o False si MIN tiene el turno.
 	def get_curr_player(self):
 		return self.curr_player
 
@@ -56,7 +53,9 @@ class StaticEval:
 		
 	# Este método debe devolver un entero indicando como de bueno es el estado para MAX 
 	# (mayor cuanto más favorable sera)
-	def eval(self,state):
+	# Se indica además como parámetro quién es el jugador MAX: jugador 1 (True) o jugador 2
+	# (False)
+	def eval(self,state,jugador_max):
 		pass 
 
 
@@ -92,14 +91,14 @@ class MinMax:
 			raise Exception('No es posible realizar ningún movimiento dado el estado inicial de la partida!');	
 	
 		# Primera llamada al algoritmo.
-		ventaja_max, best_move = self._next_move(self.inicio, self.max_deep, self.inicio.get_curr_player(), *self.args, **self.kargs)
+		ventaja_max, best_move = self._next_move(self.inicio, self.max_deep, True, *self.args, **self.kargs)
 		return best_move
 		
 	def _next_move(self, nodo, max_deep, is_max, *args, **kargs):		
 		# Si es un nodo terminal o se alcanza la profundidad máxima, no expandir más el árbol.
 		# Devolver su evaluación estática (si es terminal, coincide con su función de utilidad)
 		if nodo.is_leaf() or max_deep == 0:
-			return self.static_eval(nodo), None;
+			return self.static_eval(nodo, self.inicio.get_curr_player()), None;
 		
 		# Expandir el nodo.
 		mejor_ventaja = -Inf if is_max else Inf;
@@ -126,7 +125,7 @@ class MinMaxAlphaBeta(MinMax):
 
 	def _next_move(self, nodo, max_deep, is_max, alpha, beta, *args, **kargs):
 		if nodo.is_leaf() or max_deep == 0:
-			return self.static_eval(nodo), None;
+			return self.static_eval(nodo, self.inicio.get_curr_player()), None;
 		
 		mejor_movimiento = None;
 		if is_max:
@@ -184,7 +183,7 @@ class MinMaxDebug(MinMax):
 		if nodo.is_leaf() or max_deep == 0:
 			self.graph.set_curr_node_value(repr(self.static_eval(nodo)))
 			self.graph.backtrace()
-			return self.static_eval(nodo), None;
+			return self.static_eval(nodo,self.get_curr_player()), None;
 		
 		mejor_ventaja = -Inf if is_max else Inf;
 		best_move = None;
@@ -210,7 +209,7 @@ class MinMaxAlphaBetaDebug(MinMaxDebug):
 		if nodo.is_leaf() or max_deep == 0:
 			self.graph.set_curr_node_value(repr(self.static_eval(nodo)))
 			self.graph.backtrace()
-			return self.static_eval(nodo), None;
+			return self.static_eval(nodo,self.inicio.get_curr_player()), None;
 		
 		mejor_movimiento = None;
 		if is_max:

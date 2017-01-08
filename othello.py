@@ -34,11 +34,11 @@ class OthelloState(State):
 	# Esta instancia representará la configuración inicial de una partida Othello si no
 	# se indica ningún parámetro.
 	# Puede especificarse la información sobre las casillas del tablero y que jugador tiene
-	# el turno (MAX/MIN) por defecto MAX tiene el turno.
-	# Las fichas blancas son del jugador MAX mientras que las fichas negras son las del
-	# jugador MIN.
+	# el turno (jugador1=True, jugador2=False) por defecto jugador1 tiene el turno.
+	# Las fichas blancas son del jugador 1 mientras que las fichas negras son las del
+	# jugador 2
 	def __init__(self, curr_player = True, board = None):	
-		State.__init__(self, curr_player)
+		State.__init__(self,curr_player)
 		if board is None:
 			# initially an 8 by 8 square
 			self.board = [[0 for j in range_size] for i in range_size]
@@ -62,14 +62,26 @@ class OthelloState(State):
 
 	# Devuelve la puntuación total del jugador que juega con las fichas blancas.
 	# Si este valor es negativo significa que la puntuación del jugador con las fichas
-	# negras es superior. Si es 0, hay un empate
-	def score(game):
+	# negras es superior. Si es 0, hay un empate.
+	# Puede indicarse de forma opcional, dos parámetros. El primero indica el valor que tendrán
+	# las fichas que estén en los bordes del tablero (En vez de tener valor 1). 
+	# El otro, indicará el valor de las fichas que se encuentren en las esquinas.
+	# Por defecto, estos parámetros son 1.
+	def score(game, valor_borde = 1, valor_esquina = 1):
 		# first compute the score with +ve for white and -ve for blacks
 		score = 0
 		for i in range_size:
 			for j in range_size:
-				score += game.board[i][j]
-
+				if (i == 0) or (j == 0) or (i == size_m) or (j == size_m):
+					# Estamos en un borde o en una esquina
+					if abs(i-j) in [0, size_m]:
+						# Estamos en una esquina.
+						score += game.board[i][j] * valor_esquina
+					else:
+						# Estamos en un borde.
+						score += game.board[i][j] * valor_borde
+				else:
+					score += game.board[i][j]
 		return score
 		
 	# Comprueba si el juego ha finalizado
@@ -185,7 +197,6 @@ class OthelloState(State):
 		
 		return ret
 
-
 	## Métodos sobrecargados para poder usar el algoritmo Min-Max en Othello:
 
 	# Debe devolver un valor booleano si el estado es terminal (fin de la partida)
@@ -246,14 +257,20 @@ class OthelloMove:
 class OthelloEval(StaticEval):
 	# Este método debe devolver un entero indicando como de bueno es el estado para MAX 
 	# (mayor cuanto más favorable sera)
-	def eval(self,state):
+	def eval(self,state,jugador_max):
 		pass
-	
-# Esta clase representa una función de evaluación estática para cierta configuración de una partida del juego
-# Othello: El jugador que va en cabeza es aquel que tiene más fichas colocadas en el tablero.
-class OthelloEvalSuma(OthelloEval):
-	def eval(self,state):
-		return state.score()
+		
+# Esta clase representa una función de evaluación estática en base a la diferencia de piezas entre el jugador
+# MAX y el jugador MIN
+class OthelloEvalDiffPiezas(OthelloEval):
+	def eval(self,state,jugador_max):
+		return state.score() if jugador_max else -state.score()
+			
 
-
-
+# Esta clase representa una función de evaluación estática que tiene en cuenta posiciones estables del tablero
+# (bordes y esquinas)
+class OthelloEvalComplex(OthelloEval):
+	def eval(self,state,jugador_max):
+		valor_borde = 2
+		valor_esquina = 4
+		return state.score(valor_borde, valor_esquina) if jugador_max else -state.score(valor_borde, valor_esquina)

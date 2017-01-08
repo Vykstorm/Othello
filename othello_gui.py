@@ -159,7 +159,7 @@ class GUIPlayer(Player):
 
     def gameover(self, game, last_move):
 
-        score = game.score() * (1 if self.get_curr_player() else -1)
+        score = game.score() * (1 if game.get_curr_player() else -1)
         if score > 0:
             win_text = "White Won"
         elif score < 0:
