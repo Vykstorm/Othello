@@ -28,10 +28,17 @@ class IllegalMove(Exception):
     pass
 
 
+
+# Enfrenta a dos jugadores entre sí. Debe indicarse como parámetro, la instancia del juego,
+# y los jugadores. Puede indicarse como tercer parámetro, un valor booleano. En caso de tener valor
+# True, se mostrará información adicional del estado de la partida.
+# Devuelve como resultado un diccionario con información sobre los resultados de la partida:
+# La puntuación, que será positiva si el jugador 1 gana, negativa si el jugador 2 gana o 0 si empatan.
+# Además, se devolverá el tiempo por jugada promedio de ambos jugadores.
 def play(game, player1, player2, verbose = True):
 	"""Play a game between two players. Can raise IllegalMove"""
 
-	next = 1 # player 1 has to move first
+	next = 1 if game.get_curr_player() else 2
 	player1_think = 0.0 # total think time
 	player1_ply = 0
 	player2_think = 0.0
@@ -74,16 +81,16 @@ def play(game, player1, player2, verbose = True):
 		game = game.transform(move)
 		if verbose:
 			print game
-			print "player: ", next, "score: ", -1*game.score(), ")"
+			print "player: ", next, "score: ", game.score() if next == 1 else -game.score()
 		# switch the next player and continue the game play loop
 		next = 3 - next
 
 
 	score = game.score()
 	if score > 0:
-		print "player "+str(next)+" won with score", score
+		print "player 1 won with score", score
 	elif score < 0:
-		print "player "+str(3-next)+" won with score", -1*score
+		print "player 2 won with score", -1*score
 	else:
 		winner = 0
 		print "DRAW!!"
@@ -96,4 +103,5 @@ def play(game, player1, player2, verbose = True):
 			player1_ply+player2_ply, player1_think/player1_ply,
 			player2_think/player2_ply)
 
+	return {'score':score, 'time_per_play':[player1_think/player1_ply, player2_think /player2_ply]}
 
