@@ -133,12 +133,9 @@ class OthelloState(State):
 							moves.append((i,j))
 							# no point looking in any other direction
 							break
-
-		# if we don't have a move and the game is not over then
-		# return the None move or "no move."
 		if not moves and not self.terminal_test():
 			moves = [None]
-			
+		
 		return moves
 		
 	def play_move(self, move):
@@ -147,28 +144,29 @@ class OthelloState(State):
 		player = 1 if self.get_curr_player() else -1
 		opp = -1 * player # opponent player
 		
-		new.set_color(move, player)
+		if not move is None:
+			new.set_color(move, player)
 
-		# look in all directions
-		for dir in directions:
-			t = tuple_in_dir(move, dir)
-			# if we don't find an opponent piece then there is nothing to flip
-			if (not tuple_valid(t)) or (new.get_color(t) != opp):
-				continue
-			# now keep skip over all the opponent pieces
-			while new.get_color(t) == opp:
-				t = tuple_in_dir(t, dir)
-				# there is nothing to flip we have reached the end of the board
-				# without seeing our own color piece
-				if not tuple_valid(t):
-					break
-			else:
-				# now if we find our own piece then flip all these pieces
-				if new.get_color(t) == player:
-					t = tuple_in_dir(move, dir)
-					while new.get_color(t) == opp:
-						new.set_color(t, player)
-						t = tuple_in_dir(t, dir)
+			# look in all directions
+			for dir in directions:
+				t = tuple_in_dir(move, dir)
+				# if we don't find an opponent piece then there is nothing to flip
+				if (not tuple_valid(t)) or (new.get_color(t) != opp):
+					continue
+				# now keep skip over all the opponent pieces
+				while new.get_color(t) == opp:
+					t = tuple_in_dir(t, dir)
+					# there is nothing to flip we have reached the end of the board
+					# without seeing our own color piece
+					if not tuple_valid(t):
+						break
+				else:
+					# now if we find our own piece then flip all these pieces
+					if new.get_color(t) == player:
+						t = tuple_in_dir(move, dir)
+						while new.get_color(t) == opp:
+							new.set_color(t, player)
+							t = tuple_in_dir(t, dir)
 		return new
 
 	def __str__(self):
@@ -197,12 +195,12 @@ class OthelloState(State):
 	# Debe devolver todos los posibles movimientos que puede realizar un jugador dada esta
 	# configuración de la partida
 	def next_moves(self):
-		return [OthelloMove(casilla) for casilla in self.generate_moves()];
+		return [OthelloMove(casilla) if not casilla is None else None for casilla in self.generate_moves()];
 
 	# Debe devolver otro estado que sea el resultado de aplicar el movimiento indicado
 	# como parámetro dado el estado actual de la partida.
 	def transform(self, move):
-		return self.play_move(move.get_casilla())
+		return self.play_move(move.get_casilla()) if not move is None else self.play_move(None)
 
 	def __repr__(self):
 		return repr(self.score())
@@ -224,6 +222,9 @@ class OthelloMove:
 	# pasar el turno y no ha movido la casilla.
 	def __init__(self, casilla):
 		self.casilla = casilla
+	
+	def __eq__(self, otro):
+		return isinstance(otro,OthelloMove) and (self.get_casilla() == otro.get_casilla())
 		
 	def get_casilla(self):
 		return self.casilla
@@ -234,6 +235,10 @@ class OthelloMove:
 	def __str__(self):
 		return str(self.casilla)
 
+	def __getitem__(self, index):
+		if (type(index) != int) or not (index in [0, 1]):
+			raise IndexError()
+		return self.casilla[index]
 
 
 # Esta clase permite evaluar para cierta configuración de una partida del juego Othello,

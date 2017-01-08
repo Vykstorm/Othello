@@ -1,3 +1,6 @@
+#!/usr/bin/python
+# -*- coding: iso8859-1 -*-
+
 #    othello_gui: a GUI based interface to get the user's move
 #    Copyright (C) 2006  Nimar S. Arora
 #
@@ -20,13 +23,14 @@
 import Tkinter
 import time
 import othello
-import game2
+from othello import OthelloMove
+from game2 import Player
 
 
 BOXWIDTH=80
 BOXHEIGHT=80
 
-class player:
+class GUIPlayer(Player):
     """Make a user player to play the game via a GUI."""
 
     def __init__(self):
@@ -70,7 +74,7 @@ class player:
     def draw_board(self, game, last_move):
         """Draw an othello game on the board."""
 
-        if game.player == -1:
+        if not game.get_curr_player():
             self.movemesg.set("Black to play")
         else:
             self.movemesg.set("White to play")
@@ -146,7 +150,7 @@ class player:
             self.root.update()
             # give a pause so I can see my move
             time.sleep(.1)
-            return (0, self.move)
+            return OthelloMove(self.move)
             
         # if the user has quit the GUI then the game has to terminate,
         # we force a termination by returning an illegal value
@@ -155,7 +159,7 @@ class player:
 
     def gameover(self, game, last_move):
 
-        score = game.score() * game.player
+        score = game.score() * (1 if self.get_curr_player() else -1)
         if score > 0:
             win_text = "White Won"
         elif score < 0:
@@ -171,15 +175,3 @@ class player:
         while self.alive:
             self.root.update()
             time.sleep(.1)
-
-    
-if __name__ == "__main__":
-
-    print """othello_gui, Copyright (C) 2006 Nimar S. Arora
-othello_gui comes with ABSOLUTELY NO WARRANTY.
-This is free software, and you are welcome to redistribute it
-under certain conditions."""
-    game2.play(othello.OthelloGame(),
-               game2.player(lambda g:next(iter(g.generate_moves()))),
-               player(), True)
-
