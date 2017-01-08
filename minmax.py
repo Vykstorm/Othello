@@ -41,7 +41,11 @@ class Move:
 # Esta clase representa la evaluación estatica de un estado: Como de bueno es el estado (la configuración de 
 # la partida), para el jugador MAX
 class StaticEval:
+	def __init__(self):
+		self.cl_count = 0
+	
 	def __call__(self, *args):
+		self.cl_count = self.cl_count + 1
 		return self.eval(*args)
 	
 	def __str__(self):
@@ -56,8 +60,11 @@ class StaticEval:
 	# Se indica además como parámetro quién es el jugador MAX: jugador 1 (True) o jugador 2
 	# (False)
 	def eval(self,state,jugador_max):
-		pass 
+		pass
 
+	# Este método devuelve el nº de invocaciones realizadas a la función de evaluación estática en total.
+	def call_count(self):
+		return self.cl_count
 
 # Las instancias de esta clase permiten resolver problemas de juegos con el algoritmo MinMax
 class MinMax:

@@ -45,13 +45,19 @@ class BotPlayerMaxFeed(Player):
 class BotPlayerMinMax(Player):
 	# Inicializa la instancia. Se puede indicar como parámetro el nivel de profundidad
 	# máxima para el algoritmo MinMax.
-	def __init__(self, max_deep):
+	def __init__(self, max_deep, static_eval = None):
+		if static_eval is None:
+			static_eval = OthelloEvalDiffPiezas()
 		self.max_deep = max_deep
+		self.static_eval = static_eval
+		
+	def get_static_eval(self):
+		return self.static_eval
 	
 	def play(self, game, opp_move):
 		if len(game.next_moves()) == 0:
 			return None
-		minmax = MinMax(game, OthelloEvalDiffPiezas(), self.max_deep)
+		minmax = MinMax(game, self.get_static_eval(), self.max_deep)
 		best_move = minmax()
 		return best_move
 
@@ -64,7 +70,7 @@ class BotPlayerMinMaxAlphaBeta(BotPlayerMinMax):
 	def play(self, game, opp_move):
 		if len(game.next_moves()) == 0:
 			return None
-		minmax = MinMaxAlphaBeta(game, OthelloEvalDiffPiezas(), self.max_deep)
+		minmax = MinMaxAlphaBeta(game, self.get_static_eval(), self.max_deep)
 		best_move = minmax()
 		return best_move
 		
@@ -74,11 +80,11 @@ class BotPlayerMinMaxAlphaBeta(BotPlayerMinMax):
 # del tablero (bordes y esquinas)
 class BotPlayerComplex(BotPlayerMinMax):
 	def __init__(self, max_deep):
-		BotPlayerMinMax.__init__(self, max_deep)
+		BotPlayerMinMax.__init__(self, max_deep, OthelloEvalComplex())
 	
 	def play(self, game, opp_move):
 		if len(game.next_moves()) == 0:
 			return None
-		minmax = MinMaxAlphaBeta(game, OthelloEvalComplex(), self.max_deep)
+		minmax = MinMaxAlphaBeta(game, self.get_static_eval(), self.max_deep)
 		best_move = minmax()
 		return best_move
