@@ -23,6 +23,12 @@ class Player:
 	# Esta rutina es invocada cuando la partida finaliza.
     def gameover(self, game, last_move):
         pass
+        
+	def __str__(self):
+		return str(self.__class__.__name__)
+		
+	def __repr__(self):
+		return repr(self.__class__.__name__)
 
 class IllegalMove(Exception):
     pass
