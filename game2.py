@@ -93,21 +93,9 @@ def play(game, player1, player2, verbose = True):
 
 
 	score = game.score()
-	if score > 0:
-		print "player 1 won with score", score
-	elif score < 0:
-		print "player 2 won with score", -1*score
-	else:
-		winner = 0
-		print "DRAW!!"
 		
 	player1.gameover(game, last_move)
 	player2.gameover(game, last_move)
-
-	if player1_ply and player2_ply:
-		print "%d ply: Player 1 %.1f s per ply. Player2 %.1f s per ply" % (
-			player1_ply+player2_ply, player1_think/player1_ply,
-			player2_think/player2_ply)
 
 	return {'score':score, 'time_per_play':[player1_think/player1_ply, player2_think /player2_ply]}
 
