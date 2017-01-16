@@ -216,6 +216,29 @@ class OthelloState(State):
 	def __repr__(self):
 		return repr(self.score())
 
+
+
+	# Métodos adicionales.
+	# Devuelve una lista de listas. La lista en la posición i-ésima representa la fila i-ésima del tablero.
+	def get_rows(self):
+		return self.board
+		
+	# Devuelve una lista de listas. La lista en la posición i-ésima representa la columna i-ésima del tablero.
+	def get_cols(self):
+		return [map(lambda R:R[j], self.board) for j in range(0,size)]
+		
+	# Devuelve una lista de listas. La lista en la posición i-ésima representa la diagonal i-ésima de 45º
+	def get_diags45(self):
+		diags = [[self.board[i][j] for i,j in zip(range(k,-1,-1),range(0,k+1))] for k in range(0,size)]
+		diags = diags + [[self.board[i][j] for i,j in zip(range(k,size),range(size_m,k-1,-1))] for k in range(1,size)]
+		return diags
+		
+	# Devuelve una lista de listas. La lista en la posición i-ésima representa la diagonal i-ésima de 135º
+	def get_diags135(self):
+		diags = [[self.board[i][j] for i,j in zip(range(0,k+1),range(size_m-k,size))] for k in range(0,size)]
+		diags = diags + [[self.board[i][j] for i,j in zip(range(k,size),range(0,size_m-k+1))] for k in range(1,size)]
+		return diags
+
 # Las instancias de esta clase representan configuraciones del juego Othello en su estado
 # inicial.
 class OthelloGame(OthelloState):
@@ -271,6 +294,53 @@ class OthelloEvalDiffPiezas(OthelloEval):
 # (bordes y esquinas)
 class OthelloEvalComplex(OthelloEval):
 	def eval(self,state,jugador_max):
+		# Penalizamos cuando hay fichas del contrincante en zonas estables y premiamos
+		# cuando el jugador tiene fichas en esas zonas
 		valor_borde = 2
 		valor_esquina = 4
-		return state.score(valor_borde, valor_esquina) if jugador_max else -state.score(valor_borde, valor_esquina)
+		score = state.score(valor_borde, valor_esquina) if jugador_max else -state.score(valor_borde, valor_esquina)
+		
+		# Además, penalizamos situaciones en las cuales:
+		# EL jugador tiene varias fichas colocadas consecutivamente en una dirección
+		# ya sea fila, columna o diagonal y estas estén encerradas por un lado por una casilla
+		# vacía y por una ficha del contrincante por el otro lado. Si la casilla vacía es además
+		# una posición estable, se incrementa la penalización.
+		# Esto también se aplica cuando al revés, para premiar al jugador cuando la situación es la
+		# contraria.
+		
+		board = state.board
+		penalti = 0
+		for V in state.get_rows() + state.get_cols() + state.get_diags45() + state.get_diags135():
+			k = 0
+			while k+1 < len(V):
+				while ((V[k] == (1 if jugador_max else -1)) or (V[k+1] != (1 if jugador_max else -1))) and (k < (len(V)-2)):
+					k = k + 1
+				
+				if (V[k] != (1 if jugador_max else -1)) and (V[k+1] == (1 if jugador_max else -1)):
+					j = k + 1
+					if j == len(V)-1:
+						break
+					while (j < (len(V)-1)) and (V[j] == (1 if jugador_max else -1)):
+						j = j + 1
+					
+					if V[j] != (1 if jugador_max else -1):
+						if V[k] != V[j]:
+							# Num fichas entre la ficha contrincante y la casilla vacía.
+							n = j - k - 1 
+							# Penalizar...
+							if n >= 3:
+								if ((V[k] == 0) and ((k == 0) or (k == len(V)-1))) or ((V[j] == 0) and ((j == 0) or (j == len(V)-1))):
+									penalti = penalti + 2 * n
+								else:
+									penalti = penalti + n
+					k = j
+				else:
+					k = k + 1
+
+		score = score - penalti 
+		return score
+
+o = OthelloGame()
+o.set_color((4,2), -1)
+o.set_color((4,1), -1)
+print OthelloEvalComplex().eval(o,1)
