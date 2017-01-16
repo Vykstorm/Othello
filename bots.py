@@ -22,6 +22,10 @@ class BotPlayerRandom(Player):
 		
 		# Seleccionamos uno aleatoriamente.
 		return choice(moves)
+		
+		
+	def __repr__(self):
+		return 'Bot Aleatorio'
 
 # El siguiente bot selecciona el movimiento que más piezas come.
 class BotPlayerMaxFeed(Player):
@@ -39,6 +43,9 @@ class BotPlayerMaxFeed(Player):
 				max_pieces_eat = pieces_eat
 				best_move = move
 		return best_move
+		
+	def __repr__(self):
+		return 'Bot mejor dif. Piezas'
 
 # El siguiente bot usa el algorito MinMax para seleccionar el siguiente movimiento,
 # usando la diferencia de piezas entre MIN y MAX como función de evaluación estática.
@@ -60,6 +67,9 @@ class BotPlayerMinMax(Player):
 		minmax = MinMax(game, self.get_static_eval(), self.max_deep)
 		best_move = minmax()
 		return best_move
+		
+	def __repr__(self):
+		return 'Bot min-max sin poda'
 
 
 # Es igual que el anterior solo que el algoritmo Min-Max con poda alpha-beta
@@ -73,6 +83,9 @@ class BotPlayerMinMaxAlphaBeta(BotPlayerMinMax):
 		minmax = MinMaxAlphaBeta(game, self.get_static_eval(), self.max_deep)
 		best_move = minmax()
 		return best_move
+		
+	def __repr__(self):
+		return 'Bot min-max con poda'
 		
 		
 # Este último robot usa el algoritmo MinMax con poda alpha beta, usando
@@ -88,3 +101,6 @@ class BotPlayerComplex(BotPlayerMinMax):
 		minmax = MinMaxAlphaBeta(game, self.get_static_eval(), self.max_deep)
 		best_move = minmax()
 		return best_move
+	
+	def __repr__(self):
+		return 'Bot min-max con poda y mejorado'
