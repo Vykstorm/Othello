@@ -32,6 +32,7 @@ BOXHEIGHT=80
 
 class GUIPlayer(Player):
     """Make a user player to play the game via a GUI."""
+    
 
     def __init__(self):
         # create the GUI state variables
@@ -175,3 +176,7 @@ class GUIPlayer(Player):
         while self.alive:
             self.root.update()
             time.sleep(.1)
+	
+    
+    def __repr__(self):
+		return 'Usuario'
