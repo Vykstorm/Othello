@@ -6,6 +6,7 @@
 from othello import OthelloGame
 from game2 import play
 from bots import *
+from othello_gui import GUIPlayer
 
 # Cada una de estas instancias es una partida entre dos jugadores Othello.
 class Match:
@@ -23,9 +24,29 @@ class Match:
 
 
 if __name__ == '__main__':
-	player1 = BotPlayerComplex(2);
-	player2 = BotPlayerMinMaxAlphaBeta(2);
+	# Este parámetro establece la profundidad máxima del árbol al usar algoritmos min-max
+	profundidad = 2
+	
+	# Imprime más información de la partida
 	verbose = True
+	
+	# Primer escenario. Jugador min-max vs Jugador que selecciona jugada que más piezas come.
+	#player1 = BotPlayerMinMax(profundidad)
+	#player2 = BotPlayerMaxFeed()
+	
+	# Segundo escenario. Jugador min-max con poda alpha-beta vs jugador que selecciona movimiento que más piezas
+	# come.
+	#player1 = BotPlayerMinMaxAlphaBeta(profundidad)
+	#player2 = BotPlayerMaxFeed()
+	
+	# Tercer escenario. Jugador min-max con poda alpha beta con función de evaluación estática distinta vs
+	# jugador min-max con poda alphabeta normal.
+	#player1 = BotPlayerComplex(profundidad)
+	#player2 = BotPlayerMinMaxAlphaBeta(profundidad)
+	
+	# Un escenario de prueba. Usuario vs min-max con poda alpha beta y función de evaluación distinta
+	player1 = GUIPlayer()
+	player2 = BotPlayerComplex(profundidad)
 	
 	partida = Match(player1, player2)
 	
